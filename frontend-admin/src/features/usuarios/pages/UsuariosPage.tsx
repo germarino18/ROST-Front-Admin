@@ -5,6 +5,7 @@
  *   - Tabla con listado de usuarios (nombre, email, roles, activo/inactivo)
  *   - Modal de detalle del usuario con info completa
  *   - Modal de asignación/remoción de roles
+ *   - Modal de creación de nuevo usuario
  *   - Toggle activo/inactivo con confirmación
  */
 
@@ -19,6 +20,10 @@ export default function UsuariosPage() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [userDetailOpen, setUserDetailOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ email: '', nombre: '', password: '' });
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [createError, setCreateError] = useState('');
 
   const { data: usuarios, isLoading } = useQuery<AdminUser[]>({
     queryKey: ['admin-usuarios'],
@@ -55,6 +60,31 @@ export default function UsuariosPage() {
     },
   });
 
+  const createUser = useMutation({
+    mutationFn: (data: { email: string; nombre: string; password: string; roles: string[] }) =>
+      api.post('/admin/usuarios', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-usuarios'] });
+      setCreateModalOpen(false);
+      setCreateForm({ email: '', nombre: '', password: '' });
+      setSelectedRoles([]);
+      setCreateError('');
+    },
+    onError: (err: any) => {
+      setCreateError(err.response?.data?.detail ?? 'Error al crear usuario');
+    },
+  });
+
+  function handleCreateSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setCreateError('');
+    if (!createForm.email || !createForm.nombre || !createForm.password) {
+      setCreateError('Completá todos los campos obligatorios');
+      return;
+    }
+    createUser.mutate({ ...createForm, roles: selectedRoles });
+  }
+
   function openRoles(user: AdminUser) {
     setSelectedUser(user);
     setRoleModalOpen(true);
@@ -69,6 +99,8 @@ export default function UsuariosPage() {
     ADMIN: 'bg-purple-100 text-purple-700',
     STOCK: 'bg-blue-100 text-blue-700',
     PEDIDOS: 'bg-orange-100 text-orange-700',
+    CAJERO: 'bg-teal-100 text-teal-700',
+    COCINERO: 'bg-yellow-100 text-yellow-700',
     CLIENT: 'bg-green-100 text-green-700',
   };
 
@@ -76,6 +108,8 @@ export default function UsuariosPage() {
     ADMIN: 'Admin',
     STOCK: 'Gestor Stock',
     PEDIDOS: 'Gestor Pedidos',
+    CAJERO: 'Cajero',
+    COCINERO: 'Cocinero',
     CLIENT: 'Cliente',
   };
 
@@ -85,6 +119,13 @@ export default function UsuariosPage() {
         <p className="font-body text-sm text-on-surface-variant">
           {usuarios?.length ?? 0} usuario{(usuarios?.length ?? 0) !== 1 ? 's' : ''} registrado{(usuarios?.length ?? 0) !== 1 ? 's' : ''}
         </p>
+        <button
+          onClick={() => setCreateModalOpen(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#4d6080] text-white rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+        >
+          <span className="material-symbols-outlined text-[18px]">person_add</span>
+          Nuevo usuario
+        </button>
       </div>
 
       {isLoading ? (
@@ -220,6 +261,114 @@ export default function UsuariosPage() {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* ── Modal: Crear usuario ── */}
+      <Modal isOpen={createModalOpen} onClose={() => { setCreateModalOpen(false); setCreateError(''); }} title="Crear nuevo usuario">
+        <form onSubmit={handleCreateSubmit} className="space-y-4">
+          {createError && (
+            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {createError}
+            </div>
+          )}
+
+          <div>
+            <label className="block font-body text-sm font-semibold text-on-surface mb-1">Nombre completo</label>
+            <input
+              type="text"
+              required
+              value={createForm.nombre}
+              onChange={(e) => setCreateForm((f) => ({ ...f, nombre: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
+              placeholder="Ej: Juan Pérez"
+            />
+          </div>
+
+          <div>
+            <label className="block font-body text-sm font-semibold text-on-surface mb-1">Email</label>
+            <input
+              type="email"
+              required
+              value={createForm.email}
+              onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
+              placeholder="ejemplo@rost.com"
+            />
+          </div>
+
+          <div>
+            <label className="block font-body text-sm font-semibold text-on-surface mb-1">Contraseña</label>
+            <input
+              type="password"
+              required
+              value={createForm.password}
+              onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
+              placeholder="••••••••"
+              minLength={6}
+            />
+            <p className="font-body text-xs text-on-surface-variant mt-1">Mínimo 6 caracteres</p>
+          </div>
+
+          {/* ── Selección de roles ── */}
+          <div>
+            <label className="block font-body text-sm font-semibold text-on-surface mb-2">Roles (opcional)</label>
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {rolesDisponibles?.map((rol) => {
+                const tieneRol = selectedRoles.includes(rol.codigo);
+                return (
+                  <label
+                    key={rol.codigo}
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      tieneRol ? 'bg-primary-container/10 border-primary-container' : 'bg-surface-container-high border-outline-variant/30 hover:bg-surface-container'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={tieneRol}
+                      onChange={() => {
+                        setSelectedRoles((prev) =>
+                          tieneRol ? prev.filter((r) => r !== rol.codigo) : [...prev, rol.codigo]
+                        );
+                      }}
+                      className="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/40"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[rol.codigo] ?? 'bg-gray-100 text-gray-700'}`}>
+                        {roleLabels[rol.codigo] ?? rol.codigo}
+                      </span>
+                      <span className="font-body text-sm text-on-surface-variant">{rol.descripcion}</span>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-outline-variant/10">
+            <button
+              type="button"
+              onClick={() => { setCreateModalOpen(false); setCreateError(''); }}
+              className="px-4 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-body text-sm font-semibold hover:bg-surface-container-high transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={createUser.isPending}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#4d6080] text-white rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {createUser.isPending ? (
+                <>Creando...</>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[18px]">person_add</span>
+                  Crear usuario
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </Modal>
 
       <Modal isOpen={roleModalOpen} onClose={() => setRoleModalOpen(false)} title="Editar Roles">

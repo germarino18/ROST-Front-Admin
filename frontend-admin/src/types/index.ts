@@ -1,11 +1,3 @@
-/**
- * types/index.ts — Tipos compartidos del Frontend Admin de ROST
- *
- * Define las interfaces TypeScript para todas las entidades del dominio:
- * Producto, Categoría, Ingrediente, UnidadMedida, AdminUser, Rol.
- * También incluye las variantes Create (campos requeridos para crear)
- * y Update (todos los campos opcionales para PATCH).
- */
 
 export interface UnidadMedida {
   id: number;
@@ -173,6 +165,7 @@ export interface Pedido {
   estado_actual: string;
   total: number | null;
   created_at: string;
+  updated_at?: string | null;
   detalles: DetallePedido[];
   historial: HistorialEstado[];
 }

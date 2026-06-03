@@ -1,31 +1,18 @@
-/**
- * AdminLayout.tsx — Layout principal del panel de administración
- *
- * ESTRUCTURA:
- *   ┌─────────────────────────────────────────────┐
- *   │  Sidebar (logo, nav, avatar, cerrar sesión) │  Main (header + Outlet)
- *   │                                              │
- *   │  - Logo ROST                                 │  - Título dinámico según ruta
- *   │  - Nav items filtrados por rol del usuario   │  - <Outlet /> renderiza la página activa
- *   │  - Avatar + nombre + email                   │
- *   │  - Link "Ir a la tienda"                     │
- *   │  - Botón "Cerrar sesión"                     │
- *   │  - Versión                                   │
- *   └──────────────────────────────────────────────┘
- */
 
 import { NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/context/AuthContext';
 
 const navItems = [
+  { to: '/admin/dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['ADMIN'] },
   { to: '/admin/productos', icon: 'coffee', label: 'Productos', roles: ['ADMIN', 'STOCK'] },
   { to: '/admin/ingredientes', icon: 'liquor', label: 'Ingredientes', roles: ['ADMIN'] },
   { to: '/admin/categorias', icon: 'category', label: 'Categorías', roles: ['ADMIN'] },
-  { to: '/admin/pedidos', icon: 'orders', label: 'Pedidos', roles: ['ADMIN', 'PEDIDOS'] },
+  { to: '/admin/pedidos', icon: 'orders', label: 'Pedidos', roles: ['ADMIN', 'PEDIDOS', 'COCINERO', 'CAJERO'] },
   { to: '/admin/usuarios', icon: 'group', label: 'Usuarios', roles: ['ADMIN'] },
 ];
 
 const pageTitles: Record<string, string> = {
+  '/admin/dashboard': 'Dashboard',
   '/admin/productos': 'Productos',
   '/admin/ingredientes': 'Ingredientes',
   '/admin/categorias': 'Categorías',

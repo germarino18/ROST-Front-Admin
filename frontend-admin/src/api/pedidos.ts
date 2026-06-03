@@ -19,8 +19,8 @@ export async function getPedidoById(id: number): Promise<Pedido> {
   return res.data;
 }
 
-/** PATCH /pedidos/:id/estado — Cambia el estado de un pedido */
-export async function avanzarEstado(pedidoId: number, nuevoEstado: string): Promise<Pedido> {
-  const res = await api.patch<Pedido>(`/pedidos/${pedidoId}/estado`, { nuevo_estado: nuevoEstado });
+/** PATCH /pedidos/:id/accion — Ejecuta una acción sobre un pedido (basado en roles) */
+export async function ejecutarAccion(pedidoId: number, accion: string): Promise<Pedido> {
+  const res = await api.patch<Pedido>(`/pedidos/${pedidoId}/accion`, { accion });
   return res.data;
 }

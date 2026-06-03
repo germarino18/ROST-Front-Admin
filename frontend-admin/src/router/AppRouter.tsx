@@ -1,17 +1,3 @@
-/**
- * AppRouter.tsx — Definición de rutas del Frontend Admin
- *
- * Estructura de rutas refactorizada con layout routes:
- *   - /login → LoginPage (pública)
- *   - /no-autorizado → UnauthorizedPage (pública)
- *   - /admin → protegido con ProtectedRoute + AdminLayout
- *     - /admin/productos → ProductosPage (ADMIN, STOCK)
- *     - /admin/productos/:id → ProductoDetallePage
- *     - /admin/ingredientes → IngredientesPage (ADMIN)
- *     - /admin/categorias → CategoriasPage (ADMIN)
- *     - /admin/pedidos → CajeroPedidosPage (ADMIN, PEDIDOS)
- *     - /admin/usuarios → UsuariosPage (ADMIN)
- */
 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -25,6 +11,7 @@ import IngredientesPage from '../features/ingredientes/pages/IngredientesPage';
 import CategoriasPage from '../features/categorias/pages/CategoriasPage';
 import PedidosKanbanPage from '../features/pedidos/pages/PedidosKanbanPage';
 import UsuariosPage from '../features/usuarios/pages/UsuariosPage';
+import DashboardPage from '../features/estadisticas/pages/DashboardPage';
 import AdminIndexRedirect from './AdminIndexRedirect';
 
 export default function AppRouter() {
@@ -47,13 +34,14 @@ export default function AppRouter() {
 
           {/* Solo ADMIN */}
           <Route element={<ProtectedRoute roles={['ADMIN']} />}>
+            <Route path="dashboard" element={<DashboardPage />} />
             <Route path="categorias" element={<CategoriasPage />} />
             <Route path="ingredientes" element={<IngredientesPage />} />
             <Route path="usuarios" element={<UsuariosPage />} />
           </Route>
 
-          {/* ADMIN y PEDIDOS */}
-          <Route element={<ProtectedRoute roles={['ADMIN', 'PEDIDOS']} />}>
+          {/* ADMIN, PEDIDOS, COCINERO y CAJERO */}
+          <Route element={<ProtectedRoute roles={['ADMIN', 'PEDIDOS', 'COCINERO', 'CAJERO']} />}>
             <Route
               path="pedidos"
               element={
