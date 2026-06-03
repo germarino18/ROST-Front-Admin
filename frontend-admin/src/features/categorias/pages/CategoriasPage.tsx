@@ -93,12 +93,12 @@ export default function CategoriasPage() {
       <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-surface-container-high">
+            <thead className="bg-[#4d6080] text-white">
               <tr>
-                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Descripción</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Categoría Padre</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Nombre</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Descripción</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Categoría Padre</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
