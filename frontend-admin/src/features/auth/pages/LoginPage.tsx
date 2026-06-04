@@ -49,15 +49,12 @@ export default function LoginPage() {
               Email
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
-                <span className="material-symbols-outlined text-[18px]">mail</span>
-              </span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-9 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-5 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
                 placeholder="admin@store.com"
               />
             </div>
@@ -69,15 +66,12 @@ export default function LoginPage() {
               Contraseña
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-              </span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-9 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-5 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
                 placeholder="••••••••"
               />
             </div>
