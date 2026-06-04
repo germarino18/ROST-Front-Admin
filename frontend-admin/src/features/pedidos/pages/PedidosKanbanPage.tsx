@@ -243,6 +243,7 @@ export default function PedidosKanbanPage() {
   const { usuario } = useAuth();
   const roles = usuario?.roles?.map((r) => r.rol_codigo) ?? [];
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
+  const [searchHistorial, setSearchHistorial] = useState('');
 
   const { data: pedidos, isLoading, isError } = useQuery<Pedido[]>({
     queryKey: ['pedidos'],
@@ -282,6 +283,19 @@ export default function PedidosKanbanPage() {
     () => (pedidos ?? []).filter((p) => p.estado_actual === 'ENTREGADO'),
     [pedidos],
   );
+
+  const historialFiltrado = useMemo(() => {
+    if (!searchHistorial) return historial;
+    const q = searchHistorial.toLowerCase();
+    return historial.filter((p) => {
+      const matchId = String(p.id).includes(q);
+      const matchCliente = (p.usuario_nombre ?? '').toLowerCase().includes(q);
+      const matchItems = p.detalles?.some((d) =>
+        d.nombre_snapshot.toLowerCase().includes(q),
+      ) ?? false;
+      return matchId || matchCliente || matchItems;
+    });
+  }, [historial, searchHistorial]);
 
   // Agrupar pedidos por columna (excluyendo ENTREGADO y CANCELADO)
   const pedidosPorColumna = COLUMNAS.map((col) => ({
@@ -348,63 +362,95 @@ export default function PedidosKanbanPage() {
       {/* ── Historial de entregados (siempre visible) ── */}
       {historial.length > 0 && (
         <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-outline-variant/10">
             <div className="flex items-center gap-3">
               <h3 className="font-headline font-bold text-on-surface text-base">
-                Historial de entregados
+                ⬇️ Historial de entregados
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#10B981]/10 text-[#047857]">
-                {historial.length}
+                {historialFiltrado.length}
               </span>
+            </div>
+            <div className="relative min-w-[200px] max-w-xs">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/50 text-[18px]">search</span>
+              <input
+                type="text"
+                placeholder="Buscar en historial..."
+                value={searchHistorial}
+                onChange={(e) => setSearchHistorial(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-surface-container-high rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant/40 border border-outline-variant/20 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
+              />
+              {searchHistorial && (
+                <button
+                  onClick={() => setSearchHistorial('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface-variant transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[16px]">close</span>
+                </button>
+              )}
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-[#4d6080] text-white">
+              <thead className="bg-surface-container-high">
                 <tr>
-                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">N°</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Items</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Entregado</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">N°</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Items</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Total</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Entregado</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant/10">
-                {historial.map((p) => (
-                  <tr key={p.id} className="hover:bg-surface-container-high/50 transition-colors">
-                    <td className="px-6 py-3 font-headline font-bold text-primary text-sm">#{p.id}</td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-[#4d6080] flex items-center justify-center text-white text-[10px] font-bold uppercase shrink-0">
-                          {p.usuario_nombre?.charAt(0) ?? '?'}
-                        </div>
-                        <span className="font-body text-sm text-on-surface">{p.usuario_nombre || '—'}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-3">
-                      <div className="space-y-0.5">
-                        {p.detalles?.map((d) => (
-                          <div key={d.id} className="text-sm text-on-surface-variant">
-                            <span className="font-semibold">{d.cantidad}x</span> {d.nombre_snapshot}
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-3 font-headline font-bold text-primary text-sm">
-                      ${Number(p.total ?? 0).toFixed(2)}
-                    </td>
-                    <td className="px-6 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-[#10B981] text-[16px]">check_circle</span>
-                        <span className="text-xs text-on-surface-variant">
-                          {p.updated_at ? new Date(p.updated_at).toLocaleString('es-AR') : '—'}
-                        </span>
+              {historialFiltrado.length === 0 ? (
+                <tbody>
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center gap-2 text-on-surface-variant/50">
+                        <span className="material-symbols-outlined text-[32px]">search_off</span>
+                        <p className="text-sm font-medium">Sin resultados</p>
+                        <p className="text-xs">No se encontraron pedidos que coincidan con tu búsqueda</p>
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                </tbody>
+              ) : (
+                <tbody className="divide-y divide-outline-variant/10">
+                  {historialFiltrado.map((p) => (
+                    <tr key={p.id} className="hover:bg-surface-container-high/50 transition-colors">
+                      <td className="px-6 py-3 font-headline font-bold text-primary text-sm">#{p.id}</td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#4d6080] flex items-center justify-center text-white text-[10px] font-bold uppercase shrink-0">
+                            {p.usuario_nombre?.charAt(0) ?? '?'}
+                          </div>
+                          <span className="font-body text-sm text-on-surface">{p.usuario_nombre || '—'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="space-y-0.5">
+                          {p.detalles?.map((d) => (
+                            <div key={d.id} className="text-sm text-on-surface-variant">
+                              <span className="font-semibold">{d.cantidad}x</span> {d.nombre_snapshot}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 font-headline font-bold text-primary text-sm">
+                        ${Number(p.total ?? 0).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[#10B981] text-[16px]">check_circle</span>
+                          <span className="text-xs text-on-surface-variant">
+                            {p.updated_at ? new Date(p.updated_at).toLocaleString('es-AR') : '—'}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              )}
             </table>
           </div>
         </div>
