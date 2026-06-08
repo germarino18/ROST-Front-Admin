@@ -12,8 +12,8 @@ import { useAuth } from '../features/auth/context/AuthContext';
 export default function AdminIndexRedirect() {
   const { usuario, isLoading } = useAuth();
   if (isLoading) return null;
-  const userRoles = usuario?.roles?.map((ur) => ur.rol_codigo) ?? [];
-  if (userRoles.includes('ADMIN') || userRoles.includes('STOCK')) return <Navigate to="productos" replace />;
-  if (['PEDIDOS', 'COCINERO', 'CAJERO'].some((r) => userRoles.includes(r))) return <Navigate to="pedidos" replace />;
+  const userRole = usuario?.rol?.codigo;
+  if (userRole === 'ADMIN' || userRole === 'STOCK') return <Navigate to="productos" replace />;
+  if (userRole === 'PEDIDOS' || userRole === 'COCINERO' || userRole === 'CAJERO') return <Navigate to="pedidos" replace />;
   return <Navigate to="/no-autorizado" replace />;
 }

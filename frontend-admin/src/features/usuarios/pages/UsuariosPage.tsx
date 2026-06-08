@@ -1,14 +1,3 @@
-/**
- * UsuariosPage.tsx — Gestión de usuarios del panel admin
- *
- * Funcionalidades:
- *   - Tabla con listado de usuarios (nombre, email, roles, activo/inactivo)
- *   - Modal de detalle del usuario con info completa
- *   - Modal de asignación/remoción de roles
- *   - Modal de creación de nuevo usuario
- *   - Toggle activo/inactivo con confirmación
- */
-
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../api/client';
@@ -18,11 +7,9 @@ import type { AdminUser, Rol } from '../../../types';
 export default function UsuariosPage() {
   const queryClient = useQueryClient();
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [userDetailOpen, setUserDetailOpen] = useState(false);
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createForm, setCreateForm] = useState({ email: '', nombre: '', password: '' });
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [createForm, setCreateForm] = useState({ email: '', nombre: '', password: '', rol_codigo: '' });
   const [createError, setCreateError] = useState('');
 
   const { data: usuarios, isLoading } = useQuery<AdminUser[]>({
@@ -35,23 +22,6 @@ export default function UsuariosPage() {
     queryFn: () => api.get('/admin/roles').then((r) => r.data),
   });
 
-  const asignarRol = useMutation({
-    mutationFn: ({ userId, rolCodigo }: { userId: number; rolCodigo: string }) =>
-      api.post(`/admin/usuarios/${userId}/roles`, { rol_codigo: rolCodigo }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-usuarios'] });
-      setRoleModalOpen(false);
-    },
-  });
-
-  const removerRol = useMutation({
-    mutationFn: ({ userId, rolCodigo }: { userId: number; rolCodigo: string }) =>
-      api.delete(`/admin/usuarios/${userId}/roles/${rolCodigo}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-usuarios'] });
-    },
-  });
-
   const toggleActivo = useMutation({
     mutationFn: ({ userId, activo }: { userId: number; activo: boolean }) =>
       api.patch(`/admin/usuarios/${userId}`, { activo }),
@@ -61,13 +31,12 @@ export default function UsuariosPage() {
   });
 
   const createUser = useMutation({
-    mutationFn: (data: { email: string; nombre: string; password: string; roles: string[] }) =>
+    mutationFn: (data: { email: string; nombre: string; password: string; rol_codigo: string }) =>
       api.post('/admin/usuarios', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-usuarios'] });
       setCreateModalOpen(false);
-      setCreateForm({ email: '', nombre: '', password: '' });
-      setSelectedRoles([]);
+      setCreateForm({ email: '', nombre: '', password: '', rol_codigo: '' });
       setCreateError('');
     },
     onError: (err: any) => {
@@ -82,12 +51,11 @@ export default function UsuariosPage() {
       setCreateError('Completá todos los campos obligatorios');
       return;
     }
-    createUser.mutate({ ...createForm, roles: selectedRoles });
-  }
-
-  function openRoles(user: AdminUser) {
-    setSelectedUser(user);
-    setRoleModalOpen(true);
+    if (!createForm.rol_codigo) {
+      setCreateError('Seleccioná un rol para el usuario');
+      return;
+    }
+    createUser.mutate(createForm);
   }
 
   function openDetail(user: AdminUser) {
@@ -134,13 +102,13 @@ export default function UsuariosPage() {
         <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-[#4d6080] text-white">
+              <thead className="bg-surface-container-high">
                 <tr>
-                  <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Usuario</th>
-                  <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Roles</th>
-                  <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Estado</th>
-                  <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Acciones</th>
+                  <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Usuario</th>
+                  <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Rol</th>
+                  <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Estado</th>
+                  <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/10">
@@ -159,17 +127,13 @@ export default function UsuariosPage() {
                     </td>
                     <td className="px-6 py-4 font-body text-sm text-on-surface-variant">{u.email}</td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1.5">
-                        {u.roles.length === 0 ? (
-                          <span className="text-xs text-on-surface-variant">Sin roles</span>
-                        ) : (
-                          u.roles.map((rol) => (
-                            <span key={rol} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[rol] ?? 'bg-gray-100 text-gray-700'}`}>
-                              {roleLabels[rol] ?? rol}
-                            </span>
-                          ))
-                        )}
-                      </div>
+                      {u.rol_codigo ? (
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[u.rol_codigo] ?? 'bg-gray-100 text-gray-700'}`}>
+                          {roleLabels[u.rol_codigo] ?? u.rol_codigo}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-on-surface-variant">Sin rol</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       {u.activo ? (
@@ -184,9 +148,6 @@ export default function UsuariosPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openRoles(u)} className="text-primary hover:text-primary-container transition-colors p-1" title="Editar roles">
-                          <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
-                        </button>
                         <button onClick={() => {
                           if (confirm(`¿${u.activo ? 'Desactivar' : 'Activar'} usuario "${u.nombre}"?`)) {
                             toggleActivo.mutate({ userId: u.id, activo: !u.activo });
@@ -238,26 +199,14 @@ export default function UsuariosPage() {
             </div>
 
             <div>
-              <h4 className="font-body font-semibold text-sm text-on-surface mb-2">Roles actuales</h4>
-              <div className="flex flex-wrap gap-2">
-                {selectedUser.roles.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant">Sin roles asignados</p>
-                ) : (
-                  selectedUser.roles.map((rol) => (
-                    <span key={rol} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${roleColors[rol] ?? 'bg-gray-100 text-gray-700'}`}>
-                      {roleLabels[rol] ?? rol}
-                    </span>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button onClick={() => { setUserDetailOpen(false); openRoles(selectedUser); }}
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary-container text-on-primary rounded-lg font-body text-sm font-semibold hover:opacity-90 transition-opacity">
-                <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
-                Editar Roles
-              </button>
+              <h4 className="font-body font-semibold text-sm text-on-surface mb-2">Rol actual</h4>
+              {selectedUser.rol_codigo ? (
+                <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold ${roleColors[selectedUser.rol_codigo] ?? 'bg-gray-100 text-gray-700'}`}>
+                  {roleLabels[selectedUser.rol_codigo] ?? selectedUser.rol_codigo}
+                </span>
+              ) : (
+                <p className="text-sm text-on-surface-variant">Sin rol asignado</p>
+              )}
             </div>
           </div>
         )}
@@ -310,39 +259,22 @@ export default function UsuariosPage() {
             <p className="font-body text-xs text-on-surface-variant mt-1">Mínimo 6 caracteres</p>
           </div>
 
-          {/* ── Selección de roles ── */}
+          {/* ── Selección de rol único ── */}
           <div>
-            <label className="block font-body text-sm font-semibold text-on-surface mb-2">Roles (opcional)</label>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {rolesDisponibles?.map((rol) => {
-                const tieneRol = selectedRoles.includes(rol.codigo);
-                return (
-                  <label
-                    key={rol.codigo}
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      tieneRol ? 'bg-primary-container/10 border-primary-container' : 'bg-surface-container-high border-outline-variant/30 hover:bg-surface-container'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={tieneRol}
-                      onChange={() => {
-                        setSelectedRoles((prev) =>
-                          tieneRol ? prev.filter((r) => r !== rol.codigo) : [...prev, rol.codigo]
-                        );
-                      }}
-                      className="w-4 h-4 rounded border-outline-variant text-primary-container focus:ring-primary-container/40"
-                    />
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[rol.codigo] ?? 'bg-gray-100 text-gray-700'}`}>
-                        {roleLabels[rol.codigo] ?? rol.codigo}
-                      </span>
-                      <span className="font-body text-sm text-on-surface-variant">{rol.descripcion}</span>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
+            <label className="block font-body text-sm font-semibold text-on-surface mb-2">Rol</label>
+            <select
+              required
+              value={createForm.rol_codigo}
+              onChange={(e) => setCreateForm((f) => ({ ...f, rol_codigo: e.target.value }))}
+              className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
+            >
+              <option value="">Seleccionar rol...</option>
+              {rolesDisponibles?.map((rol) => (
+                <option key={rol.codigo} value={rol.codigo}>
+                  {roleLabels[rol.codigo] ?? rol.codigo} — {rol.descripcion}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-outline-variant/10">
@@ -369,59 +301,6 @@ export default function UsuariosPage() {
             </button>
           </div>
         </form>
-      </Modal>
-
-      <Modal isOpen={roleModalOpen} onClose={() => setRoleModalOpen(false)} title="Editar Roles">
-        {selectedUser && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 pb-3 border-b border-outline-variant/10">
-              <div className="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-white text-sm font-bold uppercase">
-                {selectedUser.nombre?.charAt(0) ?? 'U'}
-              </div>
-              <div>
-                <p className="font-body font-semibold text-on-surface">{selectedUser.nombre}</p>
-                <p className="font-body text-xs text-on-surface-variant">{selectedUser.email}</p>
-              </div>
-            </div>
-            <p className="font-body text-sm text-on-surface-variant">Seleccioná los roles que querés asignarle a este usuario:</p>
-            <div className="space-y-2">
-              {rolesDisponibles?.map((rol) => {
-                const tieneRol = selectedUser.roles.includes(rol.codigo);
-                return (
-                  <div key={rol.codigo} className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                    tieneRol ? 'bg-primary-container/10 border-primary-container' : 'bg-surface-container-high border-outline-variant/30'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${roleColors[rol.codigo] ?? 'bg-gray-100 text-gray-700'}`}>
-                        {roleLabels[rol.codigo] ?? rol.codigo}
-                      </span>
-                      <span className="font-body text-sm text-on-surface-variant">{rol.descripcion}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {tieneRol ? (
-                        <button onClick={() => removerRol.mutate({ userId: selectedUser.id, rolCodigo: rol.codigo })}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-xs font-semibold hover:bg-red-200 transition-colors" disabled={removerRol.isPending}>
-                          <span className="material-symbols-outlined text-[14px]">remove</span>Quitar
-                        </button>
-                      ) : (
-                        <button onClick={() => asignarRol.mutate({ userId: selectedUser.id, rolCodigo: rol.codigo })}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-primary-container/20 text-primary rounded-lg text-xs font-semibold hover:bg-primary-container/30 transition-colors" disabled={asignarRol.isPending}>
-                          <span className="material-symbols-outlined text-[14px]">add</span>Asignar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex justify-end pt-2">
-              <button onClick={() => setRoleModalOpen(false)}
-                className="px-5 py-2.5 rounded-lg border border-outline-variant text-on-surface-variant font-body text-sm font-semibold hover:bg-surface-container-high transition-colors">
-                Cerrar
-              </button>
-            </div>
-          </div>
-        )}
       </Modal>
     </div>
   );

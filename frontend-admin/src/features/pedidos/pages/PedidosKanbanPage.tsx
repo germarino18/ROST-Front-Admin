@@ -241,7 +241,7 @@ function Columna({
 export default function PedidosKanbanPage() {
   const queryClient = useQueryClient();
   const { usuario } = useAuth();
-  const roles = usuario?.roles?.map((r) => r.rol_codigo) ?? [];
+  const roles = usuario?.rol?.codigo ? [usuario.rol.codigo] : [];
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
   const [searchHistorial, setSearchHistorial] = useState('');
 

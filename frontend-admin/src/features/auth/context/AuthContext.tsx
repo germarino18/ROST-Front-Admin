@@ -5,16 +5,16 @@
  * Al montar, hace GET /auth/me para restaurar la sesión vía cookie HttpOnly.
  * Expone: login, logout, hasRole, usuario, isLoading.
  *
- * Los roles vienen como array de string (AdminUser.roles).
+ * El usuario tiene un solo rol (rol.codigo).
  * El método hasRole() verifica si el usuario tiene un código de rol específico.
  */
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import api from '../../../api/client';
 
-interface RolInfo {
-  rol_codigo: string;
-  rol: { codigo: string; descripcion: string };
+interface RolRead {
+  codigo: string;
+  descripcion: string;
 }
 
 export interface UsuarioAuth {
@@ -22,7 +22,7 @@ export interface UsuarioAuth {
   email: string;
   nombre: string;
   activo: boolean;
-  roles: RolInfo[];
+  rol: { codigo: string; descripcion: string } | null;
 }
 
 export interface AuthContextType {
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Verifica si el usuario logueado tiene un rol específico (por código) */
   const hasRole = (rol: string) =>
-    usuario?.roles?.some((ur) => ur.rol_codigo === rol) ?? false;
+    usuario?.rol?.codigo === rol ?? false;
 
   return (
     <AuthContext.Provider value={{ usuario, isLoading, login, logout, hasRole }}>

@@ -1,4 +1,3 @@
-
 import { NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../features/auth/context/AuthContext';
 
@@ -39,7 +38,7 @@ export default function AdminLayout() {
         </div>
         <nav className="flex-1 space-y-0.5 px-3 py-4">
           {navItems
-            .filter((item) => item.roles.some((r) => usuario?.roles?.some((ur) => ur.rol_codigo === r)))
+            .filter((item) => item.roles.some((r) => r === usuario?.rol?.codigo))
             .map((item) => (
               <NavLink
                 key={item.to}

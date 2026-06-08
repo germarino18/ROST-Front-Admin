@@ -37,8 +37,8 @@ export default function ProtectedRoute({ roles }: Props) {
 
   /** Estado: autenticado pero sin roles requeridos */
   if (roles) {
-    const userRoles = usuario.roles?.map((ur) => ur.rol_codigo) ?? [];
-    const hasAccess = roles.some((r) => userRoles.includes(r));
+    const userRole = usuario?.rol?.codigo;
+    const hasAccess = roles.some((r) => r === userRole);
     if (!hasAccess) {
       return <Navigate to="/no-autorizado" replace />;
     }
