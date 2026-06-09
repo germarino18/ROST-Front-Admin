@@ -7,10 +7,11 @@
  * Auto-refetch cada 15 segundos.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPedidos, ejecutarAccion } from '../../../api/pedidos';
 import { useAuth } from '../../auth/context/AuthContext';
+import { useWebSocket } from '../../hooks/useWebSocket';
 import type { Pedido } from '../../../types';
 
 /* ─────────────────── Constantes ─────────────────── */
@@ -242,20 +243,48 @@ export default function PedidosKanbanPage() {
   const queryClient = useQueryClient();
   const { usuario } = useAuth();
   const roles = usuario?.rol?.codigo ? [usuario.rol.codigo] : [];
+
+  const { isConnected, lastReconnect } = useWebSocket({
+    onOrderUpdated: (pedido) => {
+      queryClient.setQueryData<Pedido[]>(['pedidos'], (old) => {
+        if (!old) return [pedido];
+        const idx = old.findIndex((p) => p.id === pedido.id);
+        if (idx >= 0) {
+          const updated = [...old];
+          updated[idx] = pedido;
+          return updated;
+        }
+        return [pedido, ...old];
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (lastReconnect) {
+      queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    }
+  }, [lastReconnect, queryClient]);
+
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
   const [searchHistorial, setSearchHistorial] = useState('');
 
   const { data: pedidos, isLoading, isError } = useQuery<Pedido[]>({
     queryKey: ['pedidos'],
     queryFn: getPedidos,
-    refetchInterval: 15000,
+    refetchInterval: isConnected ? false : 15000,
     retry: 1,
   });
 
   const accionMutation = useMutation({
     mutationFn: ({ pedidoId, accion }: { pedidoId: number; accion: string }) =>
       ejecutarAccion(pedidoId, accion),
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Actualizar cache instantáneamente con el pedido modificado
+      queryClient.setQueryData<Pedido[]>(['pedidos'], (old) => {
+        if (!old) return old;
+        return old.map((p) => (p.id === data.id) ? { ...p, ...data } : p);
+      });
+      // Refetch de fondo para asegurar consistencia
       queryClient.invalidateQueries({ queryKey: ['pedidos'] });
     },
   });
@@ -341,7 +370,17 @@ export default function PedidosKanbanPage() {
             </span>
           )}
         </div>
-        <span className="text-xs text-on-surface-variant/50">Auto-actualización cada 15s</span>
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-block w-2 h-2 rounded-full ${
+              isConnected ? 'bg-green-500' : 'bg-yellow-500'
+            }`}
+            title={isConnected ? 'Tiempo real' : 'Reconectando...'}
+          />
+          <span className="text-xs text-on-surface-variant/50">
+            {isConnected ? 'Tiempo real' : 'Reconectando...'}
+          </span>
+        </div>
       </div>
 
       {/* ── Tablero Kanban (3 columnas) ── */}
