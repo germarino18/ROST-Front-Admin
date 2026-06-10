@@ -12,14 +12,15 @@
  */
 
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuthStore } from '../features/auth/store/authStore';
 
 interface Props {
   roles?: string[];
 }
 
 export default function ProtectedRoute({ roles }: Props) {
-  const { usuario, isLoading } = useAuth();
+  const usuario = useAuthStore((s) => s.usuario);
+  const isLoading = useAuthStore((s) => s.isLoading);
 
   /** Estado: cargando verificación de sesión */
   if (isLoading) {

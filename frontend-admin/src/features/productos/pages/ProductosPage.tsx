@@ -16,14 +16,14 @@ import { getProductos, createProducto, updateProducto, deleteProducto } from '..
 import { getCategorias } from '../../../api/categorias';
 import { getIngredientes } from '../../../api/ingredientes';
 import { getUnidadesMedida } from '../../../api/unidadesMedida';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuthStore } from '../../auth/store/authStore';
 import Modal from '../../../components/Modal';
 import ProductoForm from '../components/ProductoForm';
 import type { Producto, ProductoCreate, ProductoUpdate } from '../../../types';
 
 export default function ProductosPage() {
   const queryClient = useQueryClient();
-  const { hasRole } = useAuth();
+  const hasRole = useAuthStore((s) => s.hasRole);
   const isAdmin = hasRole('ADMIN');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -183,13 +183,13 @@ export default function ProductosPage() {
       <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#4d6080] text-white">
+            <thead className="bg-surface-container-high">
               <tr>
-                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Nombre</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Precio</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Disponible</th>
-                <th className="px-6 py-4 font-body font-semibold text-sm uppercase tracking-wider">Acciones</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Nombre</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Precio</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Disponible</th>
+                <th className="px-6 py-4 font-body font-semibold text-sm text-primary uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">

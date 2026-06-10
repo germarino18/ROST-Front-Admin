@@ -1,5 +1,6 @@
+
 import { NavLink, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuthStore } from '../features/auth/store/authStore';
 
 const navItems = [
   { to: '/admin/dashboard', icon: 'dashboard', label: 'Dashboard', roles: ['ADMIN'] },
@@ -22,7 +23,8 @@ const pageTitles: Record<string, string> = {
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { usuario, logout } = useAuth();
+  const usuario = useAuthStore((s) => s.usuario);
+  const logout = useAuthStore((s) => s.logout);
   const currentTitle = pageTitles[location.pathname] ?? 'Panel de Control';
 
   const handleLogout = async () => {

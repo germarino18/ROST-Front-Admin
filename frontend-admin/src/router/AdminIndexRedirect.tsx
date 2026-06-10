@@ -7,10 +7,11 @@
  */
 
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../features/auth/context/AuthContext';
+import { useAuthStore } from '../features/auth/store/authStore';
 
 export default function AdminIndexRedirect() {
-  const { usuario, isLoading } = useAuth();
+  const usuario = useAuthStore((s) => s.usuario);
+  const isLoading = useAuthStore((s) => s.isLoading);
   if (isLoading) return null;
   const userRole = usuario?.rol?.codigo;
   if (userRole === 'ADMIN' || userRole === 'STOCK') return <Navigate to="productos" replace />;

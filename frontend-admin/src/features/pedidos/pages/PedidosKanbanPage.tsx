@@ -10,7 +10,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPedidos, ejecutarAccion } from '../../../api/pedidos';
-import { useAuth } from '../../auth/context/AuthContext';
+import { useAuthStore } from '../../auth/store/authStore';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import type { Pedido } from '../../../types';
 
@@ -241,7 +241,7 @@ function Columna({
 
 export default function PedidosKanbanPage() {
   const queryClient = useQueryClient();
-  const { usuario } = useAuth();
+  const usuario = useAuthStore((s) => s.usuario);
   const roles = usuario?.rol?.codigo ? [usuario.rol.codigo] : [];
 
   const { isConnected, lastReconnect } = useWebSocket({

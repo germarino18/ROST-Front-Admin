@@ -1,7 +1,7 @@
 /**
  * LoginPage.tsx — Página de inicio de sesión del panel admin.
  * - Formulario con email + contraseña
- * - Llama a AuthContext.login() que hace POST /auth/login + GET /auth/me
+ * - Llama a useAuthStore.login() que hace POST /auth/login + GET /auth/me
  * - Muestra error si las credenciales son incorrectas
  * - Redirige al dashboard /admin al iniciar sesión correctamente
  *
@@ -12,13 +12,13 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuthStore } from '../store/authStore';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,12 +49,15 @@ export default function LoginPage() {
               Email
             </label>
             <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
+                <span className="material-symbols-outlined text-[18px]">mail</span>
+              </span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-5 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-9 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
                 placeholder="admin@store.com"
               />
             </div>
@@ -66,12 +69,15 @@ export default function LoginPage() {
               Contraseña
             </label>
             <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant/60">
+                <span className="material-symbols-outlined text-[18px]">lock</span>
+              </span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-5 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
+                className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg pl-9 pr-4 py-3 text-on-surface font-body text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary-container"
                 placeholder="••••••••"
               />
             </div>
