@@ -177,3 +177,15 @@ export interface Pedido {
   detalles: DetallePedido[];
   historial: HistorialEstado[];
 }
+
+/** PagoRead — Pago de MercadoPago asociado a un pedido */
+export interface PagoRead {
+  id: number;
+  pedido_id: number;
+  mp_preference_id: string | null;
+  mp_status: string; // "pending" | "approved" | "rejected" | "cancelled"
+  mp_status_detail: string | null;
+  transaction_amount: number | null;
+  external_reference: string;
+  created_at: string;
+}

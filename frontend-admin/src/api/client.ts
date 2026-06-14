@@ -15,6 +15,7 @@ import axios from 'axios';
 const api = axios.create({
   baseURL: '/api/v1',
   withCredentials: true,
+  timeout: 15_000, // 15s — evita requests colgadas para siempre
 });
 
 api.interceptors.response.use(

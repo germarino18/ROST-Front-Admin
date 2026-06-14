@@ -10,9 +10,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPedidos, ejecutarAccion } from '../../../api/pedidos';
+import { getPago } from '../../../api/pagos';
 import { useAuthStore } from '../../auth/store/authStore';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import type { Pedido } from '../../../types';
+import type { Pedido, PagoRead } from '../../../types';
 
 /* ─────────────────── Constantes ─────────────────── */
 
@@ -118,6 +119,15 @@ function TarjetaPedido({
   const esEntregado = pedido.estado_actual === 'ENTREGADO';
   const botones = botonesParaRol(pedido.estado_actual, roles);
 
+  // Query del pago MercadoPago asociado a este pedido
+  const { data: pago } = useQuery<PagoRead | null>({
+    queryKey: ['pago', pedido.id],
+    queryFn: () => getPago(pedido.id),
+    enabled: true,
+    staleTime: 30_000,
+    retry: false,
+  });
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-outline-variant/15 p-4 space-y-3 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between">
@@ -154,6 +164,32 @@ function TarjetaPedido({
           ${Number(pedido.total ?? 0).toFixed(2)}
         </span>
       </div>
+
+      {/* Badge de estado de pago MercadoPago (solo si el pedido tiene pago) */}
+      {pago && (
+        <div className="flex items-center pt-0.5">
+          {pago.mp_status === 'pending' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-700">
+              <span className="text-[10px]">💳</span> Pago pendiente
+            </span>
+          )}
+          {pago.mp_status === 'approved' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700">
+              <span className="text-[10px]">✓</span> Pago aprobado
+            </span>
+          )}
+          {pago.mp_status === 'rejected' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">
+              <span className="text-[10px]">✗</span> Pago rechazado
+            </span>
+          )}
+          {!['pending', 'approved', 'rejected'].includes(pago.mp_status) && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-600">
+              {pago.mp_status}
+            </span>
+          )}
+        </div>
+      )}
 
       {!esEntregado && pedido.estado_actual !== 'CANCELADO' && (
         <div className="flex gap-2 pt-1">
@@ -256,6 +292,8 @@ export default function PedidosKanbanPage() {
         }
         return [pedido, ...old];
       });
+      // Invalidar caché del pago — el pedido pudo cambiar por pago_confirmado
+      queryClient.invalidateQueries({ queryKey: ['pago', pedido.id] });
     },
   });
 
@@ -275,10 +313,13 @@ export default function PedidosKanbanPage() {
     retry: 1,
   });
 
+  const [accionError, setAccionError] = useState<string | null>(null);
+
   const accionMutation = useMutation({
     mutationFn: ({ pedidoId, accion }: { pedidoId: number; accion: string }) =>
       ejecutarAccion(pedidoId, accion),
     onSuccess: (data) => {
+      setAccionError(null);
       // Actualizar cache instantáneamente con el pedido modificado
       queryClient.setQueryData<Pedido[]>(['pedidos'], (old) => {
         if (!old) return old;
@@ -286,6 +327,11 @@ export default function PedidosKanbanPage() {
       });
       // Refetch de fondo para asegurar consistencia
       queryClient.invalidateQueries({ queryKey: ['pedidos'] });
+    },
+    onError: (err: Error) => {
+      const msg = (err as any)?.response?.data?.detail || err.message || 'Error desconocido';
+      setAccionError(msg);
+      console.error('[accionMutation] Error:', msg);
     },
   });
 
@@ -357,6 +403,17 @@ export default function PedidosKanbanPage() {
 
   return (
     <div>
+      {/* ── Error banner ── */}
+      {accionError && (
+        <div className="flex items-center gap-3 px-4 py-3 mb-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span className="material-symbols-outlined text-red-500 text-[20px]">error</span>
+          <span className="flex-1">{accionError}</span>
+          <button onClick={() => setAccionError(null)} className="text-red-400 hover:text-red-600 transition-colors">
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      )}
+
       {/* ── Cabecera ── */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">

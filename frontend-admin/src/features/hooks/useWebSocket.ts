@@ -22,6 +22,7 @@ export function useWebSocket(options: UseWebSocketOptions = {}) {
   optionsRef.current = options;
 
   const connect = useCallback(() => {
+    // Admin: WS via Vite proxy (mismo origen). Envía cookies de sesión automáticamente.
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/api/v1/pedidos/ws`;
 
