@@ -158,11 +158,14 @@ export interface DetallePedido {
   cantidad: number;
   precio_snapshot: number | null;
   nombre_snapshot: string;
+  subtotal_snap?: number | null;
 }
 
 export interface HistorialEstado {
   id: number;
-  estado: string;
+  estado_desde?: string | null;
+  estado_hacia: string;
+  cambiado_por: number;
   fecha: string | null;
 }
 
@@ -172,6 +175,9 @@ export interface Pedido {
   usuario_nombre: string;
   estado_actual: string;
   total: number | null;
+  subtotal?: number | null;
+  descuento?: number | null;
+  costo_envio?: number | null;
   created_at: string;
   updated_at?: string | null;
   detalles: DetallePedido[];

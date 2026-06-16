@@ -305,6 +305,7 @@ export default function PedidosKanbanPage() {
 
   const [cancelandoId, setCancelandoId] = useState<number | null>(null);
   const [searchHistorial, setSearchHistorial] = useState('');
+  const [historialDetail, setHistorialDetail] = useState<Pedido | null>(null);
 
   const { data: pedidos, isLoading, isError } = useQuery<Pedido[]>({
     queryKey: ['pedidos'],
@@ -513,8 +514,7 @@ export default function PedidosKanbanPage() {
               ) : (
                 <tbody className="divide-y divide-outline-variant/10">
                   {historialFiltrado.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-container-high/50 transition-colors">
-                      <td className="px-6 py-3 font-headline font-bold text-primary text-sm">#{p.id}</td>
+                    <tr key={p.id} onClick={() => setHistorialDetail(p)} className="hover:bg-surface-container-high/50 transition-colors cursor-pointer">
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <div className="w-7 h-7 rounded-full bg-[#4d6080] flex items-center justify-center text-white text-[10px] font-bold uppercase shrink-0">
@@ -548,6 +548,130 @@ export default function PedidosKanbanPage() {
                 </tbody>
               )}
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de detalle del pedido entregado ── */}
+      {historialDetail !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setHistorialDetail(null)} />
+          <div className="relative bg-surface-container-lowest rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-surface-container-lowest z-10 flex items-center justify-between px-6 py-4 border-b border-outline-variant/10">
+              <div className="flex items-center gap-3">
+                <h3 className="font-headline font-bold text-primary text-lg">
+                  Pedido #{historialDetail.id}
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-green-100 text-green-700">
+                  ENTREGADO
+                </span>
+              </div>
+              <button onClick={() => setHistorialDetail(null)} className="p-1 text-on-surface-variant hover:text-on-surface transition-colors">
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Cliente */}
+              <div className="flex items-center gap-3 pb-4 border-b border-outline-variant/10">
+                <div className="w-10 h-10 rounded-full bg-[#4d6080] flex items-center justify-center text-white text-sm font-bold uppercase shrink-0">
+                  {historialDetail.usuario_nombre?.charAt(0) ?? '?'}
+                </div>
+                <div>
+                  <p className="font-body text-sm font-semibold text-on-surface">{historialDetail.usuario_nombre || '—'}</p>
+                  <p className="text-xs text-on-surface-variant">Cliente</p>
+                </div>
+              </div>
+
+              {/* Timeline de estados */}
+              {historialDetail.historial && historialDetail.historial.length > 0 && (
+                <div>
+                  <h4 className="font-headline font-bold text-sm text-primary mb-3">Historial de estados</h4>
+                  <div className="space-y-2">
+                    {historialDetail.historial.map((h, i) => (
+                      <div key={h.id} className="flex items-start gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className={`w-3 h-3 rounded-full border-2 ${i === historialDetail.historial.length - 1 ? 'bg-green-500 border-green-500' : 'bg-surface-container-high border-primary/30'}`} />
+                          {i < historialDetail.historial.length - 1 && <div className="w-0.5 h-6 bg-primary/20" />}
+                        </div>
+                        <div className="flex-1 min-w-0 pb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {h.estado_desde && (
+                              <>
+                                <span className="text-xs font-medium text-on-surface-variant line-through">{h.estado_desde}</span>
+                                <span className="text-xs text-on-surface-variant/40">→</span>
+                              </>
+                            )}
+                            <span className={`text-xs font-bold ${i === historialDetail.historial.length - 1 ? 'text-green-600' : 'text-primary'}`}>
+                              {h.estado_hacia}
+                            </span>
+                          </div>
+                          {h.fecha && (
+                            <p className="text-[11px] text-on-surface-variant/60 mt-0.5">
+                              {new Date(h.fecha).toLocaleString('es-AR')}
+                              {h.cambiado_por === 0 && ' (sistema)'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Productos */}
+              <div>
+                <h4 className="font-headline font-bold text-sm text-primary mb-3">Productos</h4>
+                <div className="space-y-2">
+                  {historialDetail.detalles?.map((d) => (
+                    <div key={d.id} className="flex items-center justify-between bg-surface-container-high rounded-lg px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <span className="font-headline font-bold text-sm text-primary min-w-[2rem]">{d.cantidad}x</span>
+                        <span className="font-body text-sm text-on-surface">{d.nombre_snapshot}</span>
+                      </div>
+                      <span className="font-body text-sm font-semibold text-on-surface">
+                        ${(Number(d.precio_snapshot ?? 0) * d.cantidad).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Resumen financiero */}
+              <div className="bg-surface-container-high rounded-xl p-4 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-on-surface-variant">Subtotal</span>
+                  <span className="font-body text-on-surface">${Number(historialDetail.subtotal ?? 0).toFixed(2)}</span>
+                </div>
+                {Number(historialDetail.descuento ?? 0) > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-on-surface-variant">Descuento</span>
+                    <span className="font-body text-green-600">-${Number(historialDetail.descuento).toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-on-surface-variant">Costo de envío</span>
+                  <span className="font-body text-on-surface">${Number(historialDetail.costo_envio ?? 0).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-base pt-2 border-t border-outline-variant/20">
+                  <span className="font-headline font-bold text-primary">Total</span>
+                  <span className="font-headline font-bold text-primary">${Number(historialDetail.total ?? 0).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Fechas */}
+              <div className="grid grid-cols-2 gap-4 text-xs text-on-surface-variant">
+                <div>
+                  <p className="font-semibold">Creado</p>
+                  <p>{historialDetail.created_at ? new Date(historialDetail.created_at).toLocaleString('es-AR') : '—'}</p>
+                </div>
+                <div>
+                  <p className="font-semibold">Entregado</p>
+                  <p>{historialDetail.updated_at ? new Date(historialDetail.updated_at).toLocaleString('es-AR') : '—'}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../../../api/client';
 import Modal from '../../../components/Modal';
 import type { AdminUser, Rol } from '../../../types';
+
+/** Roles que el admin puede asignar al crear usuarios (no puede crear ADMIN ni CLIENT) */
+const ROLES_PERMITIDOS_CREAR = ['COCINERO', 'PEDIDOS', 'STOCK'] as const;
 
 export default function UsuariosPage() {
   const queryClient = useQueryClient();
@@ -21,6 +24,12 @@ export default function UsuariosPage() {
     queryKey: ['admin-roles'],
     queryFn: () => api.get('/admin/roles').then((r) => r.data),
   });
+
+  /** Filtra los roles disponibles para mostrar solo los permitidos al crear */
+  const rolesCrear = useMemo(
+    () => (rolesDisponibles ?? []).filter((r) => (ROLES_PERMITIDOS_CREAR as readonly string[]).includes(r.codigo)),
+    [rolesDisponibles],
+  );
 
   const toggleActivo = useMutation({
     mutationFn: ({ userId, activo }: { userId: number; activo: boolean }) =>
@@ -254,9 +263,9 @@ export default function UsuariosPage() {
               onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
               className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
               placeholder="••••••••"
-              minLength={6}
+              minLength={8}
             />
-            <p className="font-body text-xs text-on-surface-variant mt-1">Mínimo 6 caracteres</p>
+            <p className="font-body text-xs text-on-surface-variant mt-1">Mínimo 8 caracteres</p>
           </div>
 
           {/* ── Selección de rol único ── */}
@@ -269,7 +278,7 @@ export default function UsuariosPage() {
               className="w-full px-4 py-2.5 rounded-lg border border-outline-variant/30 bg-surface-container-high text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container/40 transition-shadow"
             >
               <option value="">Seleccionar rol...</option>
-              {rolesDisponibles?.map((rol) => (
+              {rolesCrear.map((rol) => (
                 <option key={rol.codigo} value={rol.codigo}>
                   {roleLabels[rol.codigo] ?? rol.codigo}{rol.descripcion ? ` — ${rol.descripcion}` : ''}
                 </option>
