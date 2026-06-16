@@ -10,6 +10,7 @@
 
 import type { ProductoCreate, Categoria, Ingrediente, UnidadMedida } from '../../../types';
 import { useCallback } from 'react';
+import ImageUploader from '../../../components/ImageUploader';
 
 type IngMap = Record<number, { cantidad: string; unidad_medida_id: number; es_removible: boolean }>;
 
@@ -159,26 +160,11 @@ export default function ProductoForm({
           <p className="text-sm text-on-surface-variant">Cargando categorías...</p>
         )}
       </div>
-      <div>
-        <label className="block font-body text-sm font-semibold text-on-surface mb-1">URL de Imagen (opcional)</label>
-        <input
-          type="text"
-          value={imagenUrl}
-          onChange={(e) => setImagenUrl(e.target.value)}
-          placeholder="https://ejemplo.com/imagen.jpg"
-          className="w-full bg-[#F5E6D3] border border-outline-variant rounded-lg px-4 py-2.5 text-on-surface font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary-container"
-        />
-        {imagenUrl && (
-          <div className="mt-2">
-            <img
-              src={imagenUrl}
-              alt="Preview"
-              className="w-32 h-32 object-cover rounded-lg border border-outline-variant"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          </div>
-        )}
-      </div>
+      <ImageUploader
+        currentUrl={imagenUrl || undefined}
+        onUploadComplete={(url) => setImagenUrl(url)}
+        onRemove={() => setImagenUrl('')}
+      />
 
       <div>
         <label className="block font-body text-sm font-semibold text-on-surface mb-2">Ingredientes</label>

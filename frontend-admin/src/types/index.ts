@@ -189,3 +189,16 @@ export interface PagoRead {
   external_reference: string;
   created_at: string;
 }
+
+/** ImagePublic — Imagen subida a Cloudinary */
+export interface ImagePublic {
+  id: number;
+  public_id: string;
+  url: string;
+  filename: string;
+  format: string | null;
+  width: number | null;
+  height: number | null;
+  bytes: number | null;
+  created_at: string;
+}
