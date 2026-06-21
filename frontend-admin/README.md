@@ -20,6 +20,11 @@ Desde la carpeta `frontend-admin`, ejecutá:
 pnpm install
 ```
 
+Para instalar las librerías de gráficos en caso de que no estén presentes:
+```bash
+pnpm add chart.js react-chartjs-2
+```
+
 ### 3. Ejecutar el servidor de desarrollo
 Para levantar el entorno local:
 ```bash
