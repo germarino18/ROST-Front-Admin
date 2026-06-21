@@ -1,73 +1,36 @@
-# React + TypeScript + Vite
+# ROST Frontend Admin (Panel de Administración)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este es el frontend administrativo del proyecto ROST, construido con **React + TypeScript + Vite** y estilado con **Tailwind CSS**. Permite gestionar usuarios, productos, categorías, pedidos, formas de pago, ingredientes y más.
 
-Currently, two official plugins are available:
+## 🚀 Cómo empezar
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Seguí estos pasos para correr el panel administrativo de manera local.
 
-## React Compiler
+> [!IMPORTANT]  
+> Usar siempre **pnpm** como gestor de paquetes para este proyecto.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Requisitos previos
+Asegurate de tener instalado:
+- **Node.js** (versión 18 o superior recomendada)
+- **pnpm** (instalalo globalmente con `npm install -g pnpm` si todavía no lo tenés)
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. Instalar dependencias
+Desde la carpeta `frontend-admin`, ejecutá:
+```bash
+pnpm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 3. Ejecutar el servidor de desarrollo
+Para levantar el entorno local:
+```bash
+pnpm dev
 ```
+
+El servidor levantará en [http://localhost:5173](http://localhost:5173) (o el puerto que te indique la consola). 
+
+---
+
+## 🔌 Conexión con la API Backend
+Este proyecto cuenta con un proxy en `vite.config.ts` que redirige de manera automática las peticiones con prefijo `/api` a `http://localhost:8000` (el puerto por defecto del backend). 
+
+*Asegurate de tener el backend corriendo en el puerto 8000 para que las peticiones se resuelvan correctamente.*
