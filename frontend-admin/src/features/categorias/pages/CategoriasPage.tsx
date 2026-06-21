@@ -106,7 +106,7 @@ export default function CategoriasPage() {
                 <tr key={item.id} className="hover:bg-surface-container-high/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-primary-fixed flex items-center justify-center">
                         <span className="material-symbols-outlined text-[18px] text-primary">category</span>
                       </div>
                       <span className="font-body font-semibold text-primary">{item.nombre}</span>

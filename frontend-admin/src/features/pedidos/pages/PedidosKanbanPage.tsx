@@ -462,7 +462,7 @@ export default function PedidosKanbanPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-outline-variant/10">
             <div className="flex items-center gap-3">
               <h3 className="font-headline font-bold text-on-surface text-base">
-                ⬇️ Historial de entregados
+                Historial de entregados
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#10B981]/10 text-[#047857]">
                 {historialFiltrado.length}
@@ -490,13 +490,13 @@ export default function PedidosKanbanPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-surface-container-high">
+              <thead className="bg-[#4d6080] text-white">
                 <tr>
-                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">N°</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Items</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-3 font-body font-semibold text-xs text-primary uppercase tracking-wider">Entregado</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">N°</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Cliente</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Items</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Total</th>
+                  <th className="px-6 py-3 font-body font-semibold text-xs uppercase tracking-wider">Entregado</th>
                 </tr>
               </thead>
               {historialFiltrado.length === 0 ? (
