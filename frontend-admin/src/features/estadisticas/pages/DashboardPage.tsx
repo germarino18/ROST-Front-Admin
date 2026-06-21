@@ -13,6 +13,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getDashboard, type DashboardRead } from '../../../api/estadisticas';
+import { type ChartData, type ChartOptions } from 'chart.js';
+import DashboardChart from '../../../components/charts/DashboardChart';
 
 /* ─── Helpers de presentación ─── */
 
@@ -37,6 +39,39 @@ const ESTADOS_COLORS: Record<string, string> = {
   ENTREGADO: '#059669',
   CANCELADO: '#EF4444',
 };
+
+/* ─── Mock data & helpers para gráficos ─── */
+/* Se usa real si la API responde, mock como fallback visual */
+const MOCK_ULTIMOS_7_DIAS = [
+  { fecha: '2026-06-15', cantidad: 12, ingresos: 45200 },
+  { fecha: '2026-06-16', cantidad: 18, ingresos: 67800 },
+  { fecha: '2026-06-17', cantidad: 8, ingresos: 32100 },
+  { fecha: '2026-06-18', cantidad: 22, ingresos: 89100 },
+  { fecha: '2026-06-19', cantidad: 15, ingresos: 56300 },
+  { fecha: '2026-06-20', cantidad: 25, ingresos: 102400 },
+  { fecha: '2026-06-21', cantidad: 20, ingresos: 78500 },
+];
+
+const MOCK_PRODUCTOS = [
+  { producto_id: 1, nombre: 'Muzzarella', cantidad_vendida: 45, ingresos_generados: 112500, stock_actual: 23 },
+  { producto_id: 2, nombre: 'Napolitana', cantidad_vendida: 38, ingresos_generados: 106400, stock_actual: 15 },
+  { producto_id: 3, nombre: 'Especial ROST', cantidad_vendida: 32, ingresos_generados: 128000, stock_actual: 8 },
+  { producto_id: 4, nombre: 'Fugazzeta', cantidad_vendida: 28, ingresos_generados: 84000, stock_actual: 18 },
+  { producto_id: 5, nombre: 'Calabresa', cantidad_vendida: 22, ingresos_generados: 77000, stock_actual: 4 },
+];
+
+const MOCK_PEDIDOS_POR_ESTADO: Record<string, number> = {
+  PENDIENTE: 5,
+  CONFIRMADO: 8,
+  EN_PREP: 12,
+  LISTO: 3,
+  ENTREGADO: 18,
+  CANCELADO: 2,
+};
+
+const CHART_COLORS = [
+  '#354867', '#4d6080', '#8B5CF6', '#10B981', '#F59E0B', '#3B82F6', '#EF4444',
+];
 
 /* ─── Cards resumen ─── */
 
@@ -142,6 +177,146 @@ export default function DashboardPage() {
   }
 
   const maxEstado = Math.max(...Object.values(d.pedidos_por_estado), 1);
+
+  /* ── Preparación de datos para gráficos ── */
+  /* Usa datos reales de la API; si vienen vacíos, usa mock para visualización */
+  const dias = d.pedidos_ultimos_7_dias.length > 0 ? d.pedidos_ultimos_7_dias : MOCK_ULTIMOS_7_DIAS;
+  const prods = d.productos_mas_vendidos.length > 0 ? d.productos_mas_vendidos : MOCK_PRODUCTOS;
+  const estados = Object.keys(d.pedidos_por_estado).length > 0 ? d.pedidos_por_estado : MOCK_PEDIDOS_POR_ESTADO;
+
+  const lineData: ChartData<'line'> = {
+    labels: dias.map(dia => {
+      const fecha = new Date(dia.fecha + 'T00:00:00');
+      return fecha.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric' });
+    }),
+    datasets: [
+      {
+        label: 'Pedidos',
+        data: dias.map(dia => dia.cantidad),
+        borderColor: '#354867',
+        backgroundColor: 'rgba(53, 72, 103, 0.08)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: '#354867',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+
+  const lineOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#354867',
+        titleFont: { family: 'Manrope', size: 12 },
+        bodyFont: { family: 'Manrope', size: 12 },
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: { label: ctx => `${ctx.parsed.y} pedidos` },
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Manrope', size: 11 }, color: '#44474d' },
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.05)' },
+        ticks: { font: { family: 'Manrope', size: 11 }, color: '#44474d', stepSize: 1 },
+      },
+    },
+  };
+
+  const barData: ChartData<'bar'> = {
+    labels: prods.map(p => p.nombre),
+    datasets: [
+      {
+        label: 'Vendidos',
+        data: prods.map(p => p.cantidad_vendida),
+        backgroundColor: prods.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+        borderRadius: 6,
+        borderSkipped: false,
+      },
+    ],
+  };
+
+  const barOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: true,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#354867',
+        titleFont: { family: 'Manrope', size: 12 },
+        bodyFont: { family: 'Manrope', size: 12 },
+        cornerRadius: 8,
+        padding: 10,
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.05)' },
+        ticks: { font: { family: 'Manrope', size: 11 }, color: '#44474d', stepSize: 1 },
+      },
+      y: {
+        grid: { display: false },
+        ticks: { font: { family: 'Manrope', size: 11 }, color: '#44474d' },
+      },
+    },
+  };
+
+  const doughnutData: ChartData<'doughnut'> = {
+    labels: Object.keys(estados).map(e => ESTADOS_LABELS[e] ?? e),
+    datasets: [
+      {
+        data: Object.values(estados),
+        backgroundColor: Object.keys(estados).map(e => ESTADOS_COLORS[e] ?? '#8B5CF6'),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        hoverOffset: 8,
+      },
+    ],
+  };
+
+  const doughnutOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    maintainAspectRatio: true,
+    cutout: '60%',
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          font: { family: 'Manrope', size: 11 },
+          color: '#44474d',
+          padding: 12,
+          usePointStyle: true,
+          pointStyle: 'circle',
+        },
+      },
+      tooltip: {
+        backgroundColor: '#354867',
+        titleFont: { family: 'Manrope', size: 12 },
+        bodyFont: { family: 'Manrope', size: 12 },
+        cornerRadius: 8,
+        padding: 10,
+        callbacks: {
+          label: ctx => {
+            const total = (ctx.dataset.data as number[]).reduce((a, b) => a + b, 0);
+            const pct = ((ctx.parsed / total) * 100).toFixed(1);
+            return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+          },
+        },
+      },
+    },
+  };
 
   return (
     <div className="space-y-6">
@@ -307,6 +482,31 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Gráficos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <DashboardChart
+          type="line"
+          title="Evolución de pedidos"
+          icon="timeline"
+          data={lineData}
+          options={lineOptions}
+        />
+        <DashboardChart
+          type="bar"
+          title="Productos más vendidos"
+          icon="bar_chart"
+          data={barData}
+          options={barOptions}
+        />
+        <DashboardChart
+          type="doughnut"
+          title="Pedidos por estado"
+          icon="pie_chart"
+          data={doughnutData}
+          options={doughnutOptions}
+        />
       </div>
     </div>
   );
