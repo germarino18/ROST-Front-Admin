@@ -1,8 +1,10 @@
 # ROST Frontend Admin (Panel de Administración)
 
+LINK DEL VIDEO: https://www.youtube.com/watch?v=MrAY16nCnAo
+
 Este es el frontend administrativo del proyecto ROST, construido con **React + TypeScript + Vite** y estilado con **Tailwind CSS**. Permite gestionar usuarios, productos, categorías, pedidos, formas de pago, ingredientes y más.
 
-## 🚀 Cómo empezar
+## Cómo empezar
 
 Seguí estos pasos para correr el panel administrativo de manera local.
 
@@ -35,7 +37,7 @@ El servidor levantará en [http://localhost:5173](http://localhost:5173) (o el p
 
 ---
 
-## 🔌 Conexión con la API Backend
+## Conexión con la API Backend
 Este proyecto cuenta con un proxy en `vite.config.ts` que redirige de manera automática las peticiones con prefijo `/api` a `http://localhost:8000` (el puerto por defecto del backend). 
 
 *Asegurate de tener el backend corriendo en el puerto 8000 para que las peticiones se resuelvan correctamente.*
